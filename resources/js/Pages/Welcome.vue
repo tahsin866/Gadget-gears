@@ -50,20 +50,27 @@ defineProps({
     canLogin: Boolean,
     canRegister: Boolean
 });
+
+const logoImage = ref('/Images/Gadget_gears.png')
 </script>
 
 <template>
     <Head title="ShopHub - Modern Shopping Experience" />
-    
+
     <div class="min-h-screen bg-gray-50">
         <!-- Navigation -->
         <nav class="bg-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <span class="text-2xl font-bold text-indigo-600">ShopHub</span>
-                    </div>
-                    
+<!-- In your template, update the logo section -->
+<div class="flex items-center">
+    <img :src="logoImage" alt="Gadget Gears Logo" class="h-20 w-auto  mx-5">
+</div>
+
+
+
+
+
                     <div class="flex items-center space-x-4">
                         <div v-if="canLogin" class="flex items-center space-x-4">
                             <Link v-if="$page.props.auth.user" :href="route('dashboard')"
@@ -81,10 +88,10 @@ defineProps({
                                 </Link>
                             </template>
                         </div>
-                        
+
                         <button class="p-2 hover:bg-gray-100 rounded-full">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                         </button>
