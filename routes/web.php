@@ -24,4 +24,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+route::get ('GADGET-GEARS/product', function(){
+
+    return inertia::render('GADGET-GEARS/product');
+});
+
+
+route::get ('GADGET-GEARS/coustomar', function(){
+
+    return inertia::render('GADGET-GEARS/coustomar');
+});
+
+route::get ('GADGET-GEARS/category', function(){
+
+    return inertia::render('GADGET-GEARS/category');
+});
+
+route::get ('GADGET-GEARS/order', function(){
+
+    return inertia::render('GADGET-GEARS/order');
+});
+
+
 require __DIR__.'/auth.php';

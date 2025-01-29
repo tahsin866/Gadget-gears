@@ -61,42 +61,52 @@ const logoImage = ref('/Images/Gadget_gears.png')
         <!-- Navigation -->
         <nav class="bg-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-<!-- In your template, update the logo section -->
-<div class="flex items-center">
-    <img :src="logoImage" alt="Gadget Gears Logo" class="h-20 w-auto  mx-5">
+                <div class="flex justify-between items-center h-16 px-5 bg-white shadow-md">
+    <!-- Logo Section -->
+    <div class="flex items-center">
+        <img :src="logoImage" alt="Gadget Gears Logo" class="h-20 w-auto">
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="flex items-center space-x-6">
+        <Link href="route('home')" class="text-gray-700 hover:text-indigo-600 transition">Home</Link>
+        <Link href="route('offers')" class="text-gray-700 hover:text-indigo-600 transition">Offers</Link>
+        <Link href="route('voucher')" class="text-gray-700 hover:text-indigo-600 transition">Get Voucher</Link>
+
+        <!-- Search Box -->
+        <div class="relative">
+            <input type="text" placeholder="Search..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
+            <button class="absolute right-2 top-2 text-gray-500 hover:text-indigo-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M15 10a5 5 0 1 0-10 0 5 5 0 0 0 10 0z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth and Cart Section -->
+    <div class="flex items-center space-x-4">
+        <div v-if="canLogin" class="flex items-center space-x-4">
+            <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="text-gray-700 hover:text-indigo-600 transition">
+                Dashboard
+            </Link>
+            <template v-else>
+                <Link :href="route('login')" class="text-gray-700 hover:text-indigo-600 transition">Login</Link>
+                <Link v-if="canRegister" :href="route('register')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                    Register
+                </Link>
+            </template>
+        </div>
+
+        <!-- Cart Button -->
+        <button class="p-2 hover:bg-gray-100 rounded-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+        </button>
+    </div>
 </div>
 
-
-
-
-
-                    <div class="flex items-center space-x-4">
-                        <div v-if="canLogin" class="flex items-center space-x-4">
-                            <Link v-if="$page.props.auth.user" :href="route('dashboard')"
-                                  class="text-gray-700 hover:text-indigo-600 transition">
-                                Dashboard
-                            </Link>
-                            <template v-else>
-                                <Link :href="route('login')"
-                                      class="text-gray-700 hover:text-indigo-600 transition">
-                                    Login
-                                </Link>
-                                <Link v-if="canRegister" :href="route('register')"
-                                      class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
-                                    Register
-                                </Link>
-                            </template>
-                        </div>
-
-                        <button class="p-2 hover:bg-gray-100 rounded-full">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
             </div>
         </nav>
 
