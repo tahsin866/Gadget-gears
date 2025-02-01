@@ -46,5 +46,9 @@ route::get ('GADGET-GEARS/order', function(){
     return inertia::render('GADGET-GEARS/order');
 });
 
+route::get ('GADGET-GEARS/inventory', function(){
+
+    return inertia::render('GADGET-GEARS/inventory');
+});
 
 require __DIR__.'/auth.php';

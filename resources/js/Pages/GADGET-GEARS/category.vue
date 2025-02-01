@@ -22,6 +22,9 @@ const categories = ref([
     // Add more categories
 ]);
 
+
+
+
 const showAddModal = ref(false);
 const showSubcategoryModal = ref(false);
 const selectedCategory = ref(null);
@@ -53,7 +56,7 @@ const searchQuery = ref('');
 
                 <!-- Category Analytics -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-gradient-to-br from-[#2973B2]/10 to-white p-6 rounded-xl border border-[#2973B2]/20">
+                    <div class="bg-gradient-to-br from-[#2973B2]/10 to-white p-6 rounded-md border border-[#2973B2]/20">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm text-gray-600">Total Categories</p>
@@ -63,7 +66,7 @@ const searchQuery = ref('');
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-[#EB5A3C]/10 to-white p-6 rounded-xl border border-[#EB5A3C]/20">
+                    <div class="bg-gradient-to-br from-[#EB5A3C]/10 to-white p-6 rounded-md border border-[#EB5A3C]/20">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm text-gray-600">Active Categories</p>
@@ -73,7 +76,7 @@ const searchQuery = ref('');
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-[#2973B2]/10 to-white p-6 rounded-xl border border-[#2973B2]/20">
+                    <div class="bg-gradient-to-br from-[#2973B2]/10 to-white p-6 rounded-md border border-[#2973B2]/20">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm text-gray-600">Featured Categories</p>
@@ -83,7 +86,7 @@ const searchQuery = ref('');
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-[#EB5A3C]/10 to-white p-6 rounded-xl border border-[#EB5A3C]/20">
+                    <div class="bg-gradient-to-br from-[#EB5A3C]/10 to-white p-6 rounded-md border border-[#EB5A3C]/20">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm text-gray-600">Total Products</p>

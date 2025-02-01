@@ -49,7 +49,7 @@ const topProducts = ref([
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <!-- Total Sales Card -->
-    <div class="bg-gradient-to-br from-[#2973B2]/90 to-[#1e5c8f] rounded-xl p-6">
+    <div class="bg-gradient-to-br from-[#2973B2]/90 to-[#1e5c8f] rounded-md p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-blue-100 mb-1">Total Sales</p>
@@ -67,7 +67,7 @@ const topProducts = ref([
     </div>
 
     <!-- Total Benefit Card -->
-    <div class="bg-gradient-to-br from-[#EB5A3C]/90 to-[#c73e23] rounded-xl p-6">
+    <div class="bg-gradient-to-br from-[#EB5A3C]/90 to-[#c73e23] rounded-md p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-orange-100 mb-1">Total Benefit</p>
@@ -85,7 +85,7 @@ const topProducts = ref([
     </div>
 
     <!-- Total Return Card -->
-    <div class="bg-gradient-to-br from-[#2973B2]/90 to-[#1e5c8f] rounded-xl p-6">
+    <div class="bg-gradient-to-br from-[#2973B2]/90 to-[#1e5c8f] rounded-md p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-blue-100 mb-1">Total Return</p>
@@ -103,7 +103,7 @@ const topProducts = ref([
     </div>
 
     <!-- Fourth Card -->
-    <div class="bg-gradient-to-br from-[#EB5A3C]/90 to-[#c73e23] rounded-xl p-6">
+    <div class="bg-gradient-to-br from-[#EB5A3C]/90 to-[#c73e23] rounded-md p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-orange-100 mb-1">Total Orders</p>
@@ -127,7 +127,7 @@ const topProducts = ref([
                     <!-- Sales Chart -->
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border-t-4 border-[#2973B2]">
                         <h3 class="text-lg font-semibold mb-4 text-[#2973B2]">Sales Analytics</h3>
-                        <div class="h-80 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg"></div>
+                        <div class="h-80 bg-gradient-to-br from-gray-50 to-blue-50 rounded-md"></div>
                     </div>
 
                     <!-- Recent Orders -->
@@ -138,7 +138,7 @@ const topProducts = ref([
                         </div>
                         <div class="space-y-4">
                             <div v-for="order in recentOrders" :key="order.id"
-                                 class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg hover:from-blue-50 hover:to-gray-50 transition-all duration-300">
+                                 class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-md hover:from-blue-50 hover:to-gray-50 transition-all duration-300">
                                 <!-- Your existing order content -->
 
                             </div>
