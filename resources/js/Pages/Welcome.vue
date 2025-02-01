@@ -20,23 +20,23 @@ const products = ref([
         category: 1,
         rating: 4.5
     },
+    // Add more products here...
     {
-        id: 2,
-        name: 'Smart Watch Series 7',
-        price: 299.99,
-        image: 'https://picsum.photos/400/401',
+        id: 4,
+        name: 'Gaming Laptop',
+        price: 1299.99,
+        image: 'https://picsum.photos/400/403',
         category: 1,
-        rating: 4.8
+        rating: 4.9
     },
     {
-        id: 3,
-        name: 'Designer T-Shirt',
-        price: 49.99,
-        image: 'https://picsum.photos/400/402',
-        category: 2,
-        rating: 4.3
-    },
-    // Add more products as needed
+        id: 5,
+        name: 'Smartphone',
+        price: 899.99,
+        image: 'https://picsum.photos/400/404',
+        category: 1,
+        rating: 4.7
+    }
 ]);
 
 const selectedCategory = ref(null);
@@ -51,7 +51,24 @@ defineProps({
     canRegister: Boolean
 });
 
+// Add these reactive variables
+const showSearchResults = ref(false)
+const searchQuery = ref('')
+const showMobileMenu = ref(false)
+
+// Add these functions
+function handleSearch() {
+    showSearchResults.value = searchQuery.value.length > 0
+}
+
+function toggleMobileMenu() {
+    showMobileMenu.value = !showMobileMenu.value
+}
+
+
 const logoImage = ref('/Images/Gadget_gears.png')
+
+
 </script>
 
 <template>
@@ -75,7 +92,14 @@ const logoImage = ref('/Images/Gadget_gears.png')
 
         <!-- Search Box -->
         <div class="relative">
-            <input type="text" placeholder="Search..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600">
+            <input
+    type="text"
+    v-model="searchQuery"
+    @input="handleSearch"
+    placeholder="Search..."
+    class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+>
+
             <button class="absolute right-2 top-2 text-gray-500 hover:text-indigo-600">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M15 10a5 5 0 1 0-10 0 5 5 0 0 0 10 0z"/>
