@@ -1,3 +1,116 @@
+<script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { ref, computed } from 'vue'
+
+const orderStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled']
+const tableHeaders = ['Order #', 'Customer', 'Total', 'Status', 'Date', 'Actions']
+
+const orders = ref([
+  {
+    id: 1,
+    orderNumber: 'ORD-001',
+    customerName: 'John Doe',
+    total: 299.99,
+    status: 'Pending',
+    createdAt: '2024-01-15T10:00:00',
+    items: [
+      { id: 1, productName: 'Product 1', quantity: 2, subtotal: 199.99 },
+      { id: 2, productName: 'Product 2', quantity: 1, subtotal: 100.00 }
+    ]
+  },
+  {
+    id: 2,
+    orderNumber: 'ORD-002',
+    customerName: 'Jane Smith',
+    total: 499.99,
+    status: 'Shipped',
+    createdAt: '2024-01-14T15:30:00',
+    items: [
+      { id: 3, productName: 'Product 3', quantity: 1, subtotal: 499.99 }
+    ]
+  }
+])
+
+const search = ref('')
+const statusFilter = ref('')
+const selectedOrder = ref(null)
+
+const filteredOrders = computed(() => {
+  return orders.value.filter(order => {
+    const matchesSearch = order.orderNumber.toLowerCase().includes(search.value.toLowerCase()) ||
+      order.customerName.toLowerCase().includes(search.value.toLowerCase())
+    const matchesStatus = !statusFilter.value || order.status === statusFilter.value
+    return matchesSearch && matchesStatus
+  })
+})
+
+const stats = computed(() => [
+  {
+    title: 'Total Orders',
+    value: orders.value.length,
+    icon: '📦',
+    iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
+  },
+  {
+    title: 'Pending Orders',
+    value: orders.value.filter(o => o.status === 'Pending').length,
+    icon: '⏳',
+    iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
+  },
+  {
+    title: 'Completed Orders',
+    value: orders.value.filter(o => o.status === 'Completed').length,
+    icon: '✅',
+    iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
+  },
+  {
+    title: 'Total Revenue',
+    value: `$${orders.value.reduce((sum, order) => sum + order.total, 0).toFixed(2)}`,
+    icon: '💰',
+    iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
+  }
+])
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const getStatusClass = (status) => {
+  const classes = {
+    'Pending': 'bg-[#2973B2] text-white',
+    'Processing': 'bg-[#2973B2] text-white',
+    'Shipped': 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white',
+    'Delivered': 'bg-[#EB5A3C] text-white',
+    'Completed': 'bg-[#EB5A3C] text-white',
+    'Cancelled': 'bg-gray-500 text-white'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+const viewOrder = (order) => {
+  selectedOrder.value = order
+}
+
+const updateOrderStatus = (order) => {
+  console.log('Update status for order:', order.id)
+}
+</script>
+
+
+
+
+
+
+
+
+
+
 <template>
     <AuthenticatedLayout>
       <div class="bg-gray-100">
@@ -10,19 +123,18 @@
         <main class="p-6">
           <!-- Stats Section -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div v-for="stat in stats" :key="stat.title"
-              class="bg-white rounded-lg shadow p-6">
-              <div class="flex items-center">
-                <div :class="stat.iconBg" class="p-3 rounded-full">
-                  <i :class="stat.icon" class="text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                  <h3 class="text-gray-500 text-sm">{{ stat.title }}</h3>
-                  <p class="text-2xl font-semibold">{{ stat.value }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div v-for="stat in stats" :key="stat.title" class="bg-white rounded-md shadow p-6">
+      <div class="flex items-center">
+        <div :class="stat.iconBg" class="p-3 rounded-md">
+          <span class="text-2xl">{{ stat.icon }}</span>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-gray-500 text-sm">{{ stat.title }}</h3>
+          <p class="text-2xl font-semibold">{{ stat.value }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
           <!-- Orders Table Section -->
           <div class="bg-white rounded-lg shadow">
@@ -141,109 +253,7 @@
     </AuthenticatedLayout>
   </template>
 
-  <script setup>
-  import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-  import { ref, computed } from 'vue'
 
-  const orderStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled']
-  const tableHeaders = ['Order #', 'Customer', 'Total', 'Status', 'Date', 'Actions']
-
-  const orders = ref([
-    {
-      id: 1,
-      orderNumber: 'ORD-001',
-      customerName: 'John Doe',
-      total: 299.99,
-      status: 'Pending',
-      createdAt: '2024-01-15T10:00:00',
-      items: [
-        { id: 1, productName: 'Product 1', quantity: 2, subtotal: 199.99 },
-        { id: 2, productName: 'Product 2', quantity: 1, subtotal: 100.00 }
-      ]
-    },
-    {
-      id: 2,
-      orderNumber: 'ORD-002',
-      customerName: 'Jane Smith',
-      total: 499.99,
-      status: 'Shipped',
-      createdAt: '2024-01-14T15:30:00',
-      items: [
-        { id: 3, productName: 'Product 3', quantity: 1, subtotal: 499.99 }
-      ]
-    }
-  ])
-
-  const search = ref('')
-  const statusFilter = ref('')
-  const selectedOrder = ref(null)
-
-  const filteredOrders = computed(() => {
-    return orders.value.filter(order => {
-      const matchesSearch = order.orderNumber.toLowerCase().includes(search.value.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(search.value.toLowerCase())
-      const matchesStatus = !statusFilter.value || order.status === statusFilter.value
-      return matchesSearch && matchesStatus
-    })
-  })
-
-  const stats = computed(() => [
-    {
-      title: 'Total Orders',
-      value: orders.value.length,
-      icon: '📦',
-      iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
-    },
-    {
-      title: 'Pending Orders',
-      value: orders.value.filter(o => o.status === 'Pending').length,
-      icon: '⏳',
-      iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
-    },
-    {
-      title: 'Completed Orders',
-      value: orders.value.filter(o => o.status === 'Completed').length,
-      icon: '✅',
-      iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
-    },
-    {
-      title: 'Total Revenue',
-      value: `$${orders.value.reduce((sum, order) => sum + order.total, 0).toFixed(2)}`,
-      icon: '💰',
-      iconBg: 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white'
-    }
-  ])
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const getStatusClass = (status) => {
-    const classes = {
-      'Pending': 'bg-[#2973B2] text-white',
-      'Processing': 'bg-[#2973B2] text-white',
-      'Shipped': 'bg-gradient-to-r from-[#2973B2] to-[#EB5A3C] text-white',
-      'Delivered': 'bg-[#EB5A3C] text-white',
-      'Completed': 'bg-[#EB5A3C] text-white',
-      'Cancelled': 'bg-gray-500 text-white'
-    }
-    return classes[status] || 'bg-gray-100 text-gray-800'
-  }
-
-  const viewOrder = (order) => {
-    selectedOrder.value = order
-  }
-
-  const updateOrderStatus = (order) => {
-    console.log('Update status for order:', order.id)
-  }
-  </script>
 
   <style>
   /* Add any custom styles here if needed */

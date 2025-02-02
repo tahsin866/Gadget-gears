@@ -59,53 +59,73 @@ const newProduct = ref({
 
                     <!-- Search and Filter -->
                     <div class="p-4 bg-gray-50 border-b flex gap-4">
-                        <input type="text" placeholder="Search products..."
-                               class="px-4 py-2 rounded-md border focus:outline-none focus:border-[#2973B2] flex-1">
-                        <select class="px-4 py-2 rounded-md border focus:outline-none focus:border-[#2973B2]">
-                            <option>All Categories</option>
-                            <option>Electronics</option>
-                            <option>Accessories</option>
-                        </select>
-                    </div>
+    <input type="text"
+           placeholder="Search products..."
+           class="px-4 py-2 rounded-md border focus:outline-none focus:border-[#2973B2] flex-1">
+
+    <select class="px-8 py-2 rounded-md border focus:outline-none focus:border-[#2973B2]">
+        <option>All Categories</option>
+        <option>Electronics</option>
+        <option>Accessories</option>
+    </select>
+
+    <select class="px-4 py-2 rounded-md border focus:outline-none focus:border-[#2973B2]">
+        <option>All Status</option>
+        <option>In Stock</option>
+        <option>Out of Stock</option>
+        <option>Low Stock</option>
+    </select>
+</div>
+
 
                     <!-- Product Table -->
                     <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr v-for="product in products" :key="product.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="h-10 w-10 rounded-lg bg-gray-200"></div>
-                                        <div class="ml-4">
-                                            <div class="font-medium text-gray-900">{{ product.name }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ product.sku }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ product.price }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ product.stock }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                          :class="product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                                        {{ product.status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm">
-                                    <button class="text-[#2973B2] hover:text-[#EB5A3C] mr-3">Edit</button>
-                                    <button class="text-red-600 hover:text-red-900">Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">cetagory</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+        <tr v-for="product in products" :key="product.id" class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-lg bg-gray-200"></div>
+                    <div class="ml-4">
+                        <div class="font-medium text-gray-900">{{ product.name }}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">{{ product.sku }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">{{ product.sku }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">{{ product.price }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">{{ product.stock }}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                      :class="product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                    {{ product.status }}
+                </span>
+            </td>
+            <td class="px-6 py-3">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" v-model="product.isActive" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </td>
+            <td class="px-6 py-4 text-sm">
+                <button class="text-[#2973B2] hover:text-[#EB5A3C] mr-3">Edit</button>
+                <button class="text-red-600 hover:text-red-900">Delete</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
                 </div>
             </div>
         </div>
@@ -146,7 +166,13 @@ const newProduct = ref({
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <label class="block text-sm font-medium text-gray-700">short Description</label>
+                        <textarea v-model="newProduct.description" rows="3"
+                                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"> long Description</label>
                         <textarea v-model="newProduct.description" rows="3"
                                  class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2"></textarea>
                     </div>
