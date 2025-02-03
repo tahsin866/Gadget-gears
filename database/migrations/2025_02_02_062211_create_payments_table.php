@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('payment_gateway');
             $table->enum('status', ['pending', 'completed', 'failed', 'refunded']);
             $table->json('payment_details')->nullable();
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+
         });
     }
 

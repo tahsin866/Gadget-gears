@@ -18,7 +18,9 @@ return new class extends Migration
             $table->integer('rating');
             $table->text('comment')->nullable();
             $table->boolean('is_approved')->default(false);
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+
         });
     }
 

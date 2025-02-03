@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
+use App\Http\Controllers\catagory\CategoryController;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -50,5 +50,27 @@ route::get ('GADGET-GEARS/inventory', function(){
 
     return inertia::render('GADGET-GEARS/inventory');
 });
+
+
+
+
+
+
+
+Route::get('GADGET-GEARS/categoryModel', [CategoryController::class, 'index'])->name('GADGET-GEARS.categoryModel');
+Route::post('GADGET-GEARS/categoryModel', [CategoryController::class, 'store'])->name('GADGET-GEARS.categoryModel');
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 require __DIR__.'/auth.php';

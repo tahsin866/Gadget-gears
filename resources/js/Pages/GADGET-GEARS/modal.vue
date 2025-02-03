@@ -80,7 +80,7 @@
 
 </template>
 <script setup>
-import { Dialog, DialogPanel, DialogTitle, TransitionRoot } from '@inertiajs/vue3'
+
 
  function saveItem() {
     if (editingItem.value) {

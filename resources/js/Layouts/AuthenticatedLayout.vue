@@ -80,21 +80,17 @@ const toggleSidebar = () => {
 }
 
 
+
 </script>
 
 <template>
     <div class="min-h-screen bg-gray-50">
         <!-- Top Navigation Bar -->
-
-
-
-
-
-
         <button
-      @click="toggleSidebar"
-      class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-md bg-white shadow-lg"
-    >
+          @click="toggleSidebar"
+          class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-md bg-white shadow-lg"
+          aria-label="Toggle sidebar"
+        >
       <svg
         class="w-6 h-6"
         fill="none"
@@ -243,24 +239,22 @@ const toggleSidebar = () => {
     </div>
   </nav>
         <!-- Sidebar and Main Content -->
-        <div class="flex h-[calc(100vh-4rem)]">
+        <div class= "flex h-[calc(100vh-4rem)]">
 
             <!-- Sidebar -->
             <div v-if="isSidebarOpen"
-           @click="toggleSidebar"
-           class="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity lg:hidden">
-      </div>
-
+                 @click="toggleSidebar"
+                 class="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity lg:hidden">
+            </div>
             <!-- <aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto">
 
             </aside> -->
 
 
             <aside :class="[
-        'fixed inset-y-0 left-0 transform lg:relative lg:translate-x-0 transition duration-300 ease-in-out z-40',
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      ]"
-        class="w-64 bg-white border-r border-gray-200 overflow-y-auto">
+              'fixed inset-y-0 left-0 transform lg:relative lg:translate-x-0 transition duration-300 ease-in-out z-40 sidebar-enter-active sidebar-leave-active',
+              isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            ]">
         <!-- ... existing sidebar content ... -->
         <nav class="p-4 space-y-1">
                     <a v-for="item in sidebarItems"
@@ -278,7 +272,7 @@ const toggleSidebar = () => {
                         </svg>
                         {{ item.name }}
                         <span v-if="item.badge"
-                              class="ml-auto bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
+                              class="ml-auto bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs min-w-[2rem] text-center">
                             {{ item.badge }}
                         </span>
                     </a>
@@ -291,7 +285,7 @@ const toggleSidebar = () => {
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
-                <div class=" mx-2">
+                <div class="mx-2">
                     <header class="mb-6">
                         <slot name="header" />
                     </header>
@@ -307,15 +301,9 @@ const toggleSidebar = () => {
 
 <style scoped>
 .btn-primary {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+    @apply inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 border border-transparent;
 }
 
-
-.btn-primary {
-  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
-}
-
-/* Add responsive transitions */
 .sidebar-enter-active,
 .sidebar-leave-active {
   transition: transform 0.3s ease-in-out;
@@ -325,5 +313,4 @@ const toggleSidebar = () => {
 .sidebar-leave-to {
   transform: translateX(-100%);
 }
-
 </style>

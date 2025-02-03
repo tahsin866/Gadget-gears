@@ -22,7 +22,9 @@ return new class extends Migration
     $table->decimal('total', 10, 2);
     $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled']);
     $table->text('notes')->nullable();
-    $table->timestamps();
+    $table->timestamp('created_at')->useCurrent();
+    $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
+
         });
     }
 
