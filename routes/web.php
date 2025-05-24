@@ -25,32 +25,33 @@ Route::middleware('auth')->group(function () {
 });
 
 
-route::get ('GADGET-GEARS/product', function(){
+  Route::get('/products', function () {
+        return Inertia::render('GADGET-GEARS/product');
+    })->name('GADGET-GEARS.product');
 
-    return inertia::render('GADGET-GEARS/product');
-});
+    Route::get('/categories', function () {
+        return Inertia::render('GADGET-GEARS/category');
+    })->name('GADGET-GEARS.category');
 
+    Route::get('/orders', function () {
+        return Inertia::render('Orders/Index');
+    })->name('orders.index');
 
-route::get ('GADGET-GEARS/coustomar', function(){
+    Route::get('/customers', function () {
+        return Inertia::render('Customers/Index');
+    })->name('customers.index');
 
-    return inertia::render('GADGET-GEARS/coustomar');
-});
+    Route::get('/analytics', function () {
+        return Inertia::render('Analytics/Index');
+    })->name('analytics.index');
 
-route::get ('GADGET-GEARS/category', function(){
+    Route::get('/inventory', function () {
+        return Inertia::render('Inventory/Index');
+    })->name('inventory.index');
 
-    return inertia::render('GADGET-GEARS/category');
-});
-
-route::get ('GADGET-GEARS/order', function(){
-
-    return inertia::render('GADGET-GEARS/order');
-});
-
-route::get ('GADGET-GEARS/inventory', function(){
-
-    return inertia::render('GADGET-GEARS/inventory');
-});
-
+    Route::get('/settings', function () {
+        return Inertia::render('Settings/Index');
+    })->name('settings.index');
 
 
 
