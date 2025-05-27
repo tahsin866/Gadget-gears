@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\catagory\CategoryController;
 
 
 Route::get('/user', function (Request $request) {
@@ -13,3 +13,4 @@ Route::get('/user', function (Request $request) {
 // Route::get('GADGET-GEARS/categoryModel', [CategoryController::class, 'index'])->name('GADGET-GEARS.categoryModel');
 // Route::post('GADGET-GEARS/categoryModel', [CategoryController::class, 'store'])->name('GADGET-GEARS.categoryModel');
 
+Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);

@@ -58,13 +58,13 @@ Route::middleware('auth')->group(function () {
 
 
 
-Route::get('GADGET-GEARS/categoryModel', [CategoryController::class, 'index'])->name('GADGET-GEARS.categoryModel');
-Route::post('GADGET-GEARS/categoryModel', [CategoryController::class, 'store'])->name('GADGET-GEARS.categoryModel');
+Route::post('/categories', [CategoryController::class, 'InsertCategory']);
 
+Route::post('/parent-categories', [CategoryController::class, 'InsertParentCategory']);
 
+Route::get('/show-cetagory', [CategoryController::class , 'show']);
 
-
-
+Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);
 
 
 

@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-md max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-6">
@@ -90,4 +90,4 @@ const submitForm = () => {
 }
 
 
-</script>
+</script> -->

@@ -8,20 +8,21 @@ use Illuminate\Support\Str;
 class Category extends Model
 
 
-
 {
-
 
     protected $table = 'categories';
 
-    protected $fillable = [
+
+
+ protected $fillable = [
         'name',
         'slug',
-        'description',
         'parent_id',
         'order',
+        'status',
+        'description',
         'meta_title',
-        'meta_description'
+        'meta_description',
     ];
 
     protected static function boot()
@@ -42,7 +43,6 @@ class Category extends Model
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
-
 
 
 
