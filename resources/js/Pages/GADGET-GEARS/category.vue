@@ -1,32 +1,28 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import modal from './modal.vue';
 import parentCetagiryModel from './parentCetagiryModel.vue';
 
-const props = defineProps({
-    showCetagoryList: {
-        type: Array,
-        default: () => []
-    },
-    count: {
-        type: Number,
-        default: 0
-    }
-});
+// Reactive data
+const showCetagoryList = ref([]);
+const count = ref(0);
+const loading = ref(false);
+const error = ref(null);
 
 // Computed properties for statistics
 const activeCount = computed(() => {
-    return props.showCetagoryList.filter(category => category.status === 'active').length;
+    return showCetagoryList.value.filter(category => category.status === 'active').length;
 });
 
 const featuredCount = computed(() => {
-    return props.showCetagoryList.filter(category => category.featured === 1 || category.featured === true).length;
+    return showCetagoryList.value.filter(category => category.featured === 1 || category.featured === true).length;
 });
 
 const totalProducts = computed(() => {
-    return props.showCetagoryList.reduce((total, category) => total + (category.products_count || 0), 0);
+    return showCetagoryList.value.reduce((total, category) => total + (category.products_count || 0), 0);
 });
 
 // Reactive variables
@@ -39,7 +35,7 @@ const statusFilter = ref('all');
 const sortBy = ref('name');
 
 const filteredCategories = computed(() => {
-    let filtered = props.showCetagoryList;
+    let filtered = showCetagoryList.value;
 
     if (searchQuery.value) {
         filtered = filtered.filter(category =>
@@ -66,6 +62,29 @@ const filteredCategories = computed(() => {
     });
 });
 
+// Fetch categories data
+const fetchCategories = async () => {
+    try {
+        loading.value = true;
+        error.value = null;
+
+        const response = await axios.get('/show-cetagory-list');
+
+        if (response.data.success) {
+            showCetagoryList.value = response.data.showCetagoryList;
+            count.value = response.data.count;
+        } else {
+            error.value = 'Failed to fetch categories';
+        }
+    } catch (err) {
+        error.value = err.response?.data?.message || 'An error occurred while fetching categories';
+        console.error('Error fetching categories:', err);
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Modal functions
 const openEditModal = (category) => {
     editingCategory.value = category;
     showModal.value = true;
@@ -86,14 +105,43 @@ const handleCategoryUpdated = () => {
     showCetagoryModal.value = false;
     editingCategory.value = null;
     ParentCategory.value = null;
+    // Refresh data after update
+    fetchCategories();
 };
 
-const deleteCategory = (category) => {
+const deleteCategory = async (category) => {
     if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
-        // Handle delete logic here
-        console.log('Deleting category:', category);
+        try {
+            const response = await fetch(`${window.location.origin}/delete-category/${category.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remove category from the list
+                filteredCategories.value = filteredCategories.value.filter(cat => cat.id !== category.id);
+                alert(data.message);
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            alert('An error occurred while deleting the category');
+        }
     }
 };
+
+
+
 
 const getStatusBadgeClass = (status) => {
     const classes = {
@@ -103,7 +151,24 @@ const getStatusBadgeClass = (status) => {
     };
     return classes[status] || 'bg-gray-100 text-gray-800';
 };
+
+const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
+// Fetch data on component mount
+onMounted(() => {
+    fetchCategories();
+});
+
+
+
 </script>
+
 
 <template>
     <Head title="Category Management" />
@@ -233,7 +298,7 @@ const getStatusBadgeClass = (status) => {
                 </div>
 
                 <!-- Categories Table -->
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
     <!-- Search and Filter Bar -->
     <div class="bg-white px-4 py-5 border-b border-gray-200 sm:px-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
@@ -280,165 +345,176 @@ const getStatusBadgeClass = (status) => {
     </div>
 
     <!-- Categories Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Products
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                    </th>
-                    <th scope="col" class="relative px-6 py-3">
-                        <span class="sr-only">Actions</span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <template v-for="category in filteredCategories" :key="category.id">
-                    <!-- Main Category Row -->
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <div class="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ category.name }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ category.slug }}
-                                    </div>
-                                    <div v-if="category.description" class="text-sm text-gray-400 mt-1 max-w-xs truncate">
-                                        {{ category.description }}
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span :class="getStatusBadgeClass(category.status)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize">
-                                {{ category.status }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex items-center">
-                                <svg class="mr-1.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+<div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+            <tr>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        <span>Category</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Status</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span>Products</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>Type</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span>Meta Title</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                        </svg>
+                        <span>Meta Description</span>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                    <div class="flex items-center space-x-1">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Created</span>
+                    </div>
+                </th>
+                <th scope="col" class="relative px-6 py-4 border-b border-gray-200">
+                    <span class="sr-only">Actions</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            <tr v-for="category in filteredCategories" :key="category.id" class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group">
+                <td class="px-6 py-5 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-12 w-12">
+                            <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow duration-200">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
-                                {{ category.products_count || 0 }}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex items-center">
-                                <span v-if="category.parent_id" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                    Subcategory
-                                </span>
-                                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Parent Category
-                                </span>
-                                <span v-if="category.children && category.children.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                    {{ category.children.length }} subcategories
-                                </span>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors duration-200">
+                                {{ category.name }}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ formatDate(category.created_at) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex items-center justify-end space-x-2">
-                                <button
-                                    @click="openEditModal(category)"
-                                    class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    title="Edit Category"
-                                >
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    @click="deleteCategory(category)"
-                                    class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                    title="Delete Category"
-                                >
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
+                            <div class="text-sm text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded-md mt-1 inline-block">
+                                {{ category.slug }}
                             </div>
-                        </td>
-                    </tr>
+                            <div v-if="category.description" class="text-sm text-gray-400 mt-2 max-w-xs truncate bg-gray-50 px-2 py-1 rounded-md">
+                                {{ category.description }}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap">
+                    <span :class="getStatusBadgeClass(category.status)" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize shadow-sm">
+                        <span class="w-2 h-2 rounded-full mr-2" :class="category.status === 'active' ? 'bg-green-400' : 'bg-red-400'"></span>
+                        {{ category.status }}
+                    </span>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-900">
+                    <div class="flex items-center bg-gray-50 px-3 py-2 rounded-lg w-fit">
+                        <svg class="mr-2 h-4 w-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span class="font-semibold text-gray-700">{{ category.products_count || 0 }}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center space-x-2">
+                        <span v-if="category.parent_id" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 shadow-sm">
+                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            Subcategory
+                        </span>
+                        <span v-else class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 shadow-sm">
+                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                            Parent Category
+                        </span>
+                        <span v-if="category.children && category.children.length > 0" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm">
+                            {{ category.children.length }} subcategories
+                        </span>
+                    </div>
+                </td>
+                <td class="px-6 py-5 text-sm text-gray-900">
+                    <div v-if="category.meta_title" class="max-w-xs truncate bg-gray-50 px-3 py-2 rounded-lg" :title="category.meta_title">
+                        {{ category.meta_title }}
+                    </div>
+                    <span v-else class="text-gray-400 italic bg-gray-50 px-3 py-2 rounded-lg">No meta title</span>
+                </td>
+                <td class="px-6 py-5 text-sm text-gray-900">
+                    <div v-if="category.meta_description" class="max-w-xs truncate bg-gray-50 px-3 py-2 rounded-lg" :title="category.meta_description">
+                        {{ category.meta_description }}
+                    </div>
+                    <span v-else class="text-gray-400 italic bg-gray-50 px-3 py-2 rounded-lg">No meta description</span>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500">
+                    <div class="bg-gray-50 px-3 py-2 rounded-lg font-medium">
+                        {{ formatDate(category.created_at) }}
+                    </div>
+                </td>
+                <td class="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="flex items-center justify-end space-x-3">
+                        <button
+                            @click="openEditModal(category)"
+                            class="inline-flex items-center p-2 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 transition-all duration-200"
+                            title="Edit Category"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button
+                            @click="deleteCategory(category)"
+                            class="inline-flex items-center p-2 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-105 transition-all duration-200"
+                            title="Delete Category"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-                    <!-- SEO Meta Information Row (Expandable) -->
-                    <tr v-if="category.meta_title || category.meta_description" class="bg-gray-50">
-                        <td colspan="6" class="px-6 py-3">
-                            <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                <h4 class="text-xs font-medium text-gray-700 uppercase tracking-wide mb-3 flex items-center">
-                                    <svg class="h-4 w-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                    </svg>
-                                    SEO Information
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div v-if="category.meta_title">
-                                        <span class="text-xs text-gray-500 font-medium">Meta Title:</span>
-                                        <p class="text-sm text-gray-900 mt-1">{{ category.meta_title }}</p>
-                                    </div>
-                                    <div v-if="category.meta_description">
-                                        <span class="text-xs text-gray-500 font-medium">Meta Description:</span>
-                                        <p class="text-sm text-gray-900 mt-1">{{ category.meta_description }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
 
-                    <!-- Subcategories Row (if any) -->
-                    <tr v-if="category.children && category.children.length > 0" class="bg-blue-50">
-                        <td colspan="6" class="px-6 py-3">
-                            <div class="bg-white rounded-lg p-4 border border-blue-200">
-                                <h4 class="text-xs font-medium text-blue-700 uppercase tracking-wide mb-3 flex items-center">
-                                    <svg class="h-4 w-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                    </svg>
-                                    Subcategories ({{ category.children.length }})
-                                </h4>
-                                <div class="flex flex-wrap gap-2">
-                                    <span
-                                        v-for="child in category.children"
-                                        :key="child.id"
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
-                                    >
-                                        {{ child.name }}
-                                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-200 text-blue-900">
-                                            {{ child.products_count || 0 }}
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </div>
+
+
+
 
     <!-- Empty State -->
     <div v-if="filteredCategories.length === 0" class="text-center py-12">
@@ -498,6 +574,7 @@ const getStatusBadgeClass = (status) => {
         </div>
     </div>
 </div>
+
 
 
             </div>

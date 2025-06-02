@@ -74,9 +74,8 @@ class CategoryController extends Controller
 
 public function show(){
 
-$parentCetagory = parent_category::get();
-
-return response()->json($parentCetagory);
+  $categories = Category::where('status', 'active')->get(); // categories table থেকে
+    return response()->json($categories);
 
 }
 
@@ -119,6 +118,28 @@ public function showCetagoryList()
             ], 500);
         }
     }
+
+
+
+
+
+  public function deleteCetagory($id)
+{
+    $cetagory = Category::find($id);
+
+    if ($cetagory) {
+        $cetagory->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Category deleted successfully'
+        ]);
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Category not found'
+    ]);
+}
 
 
 }

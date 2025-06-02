@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\catagory\CategoryController;
+use App\Http\Controllers\ProductController;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -65,9 +66,14 @@ Route::post('/parent-categories', [CategoryController::class, 'InsertParentCateg
 Route::get('/show-cetagory', [CategoryController::class , 'show']);
 
 Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);
+Route::delete('/delete-category/{id}', [CategoryController::class, 'deleteCetagory']);
 
 
 
+// existing routes এর সাথে এই route টি যোগ করো
+
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::get('/products-list', [ProductController::class, 'productList'])->name('products.List');
 
 
 

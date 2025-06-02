@@ -6,15 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Category extends Model
-
-
 {
-
     protected $table = 'categories';
 
-
-
- protected $fillable = [
+    protected $fillable = [
         'name',
         'slug',
         'parent_id',
@@ -44,7 +39,9 @@ class Category extends Model
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-
-
-
+    // Products relationship - এটি সংশোধন করুন
+    public function products()
+    {
+        return $this->hasMany(products::class, 'category_id');
+    }
 }

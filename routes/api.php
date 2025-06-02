@@ -13,4 +13,4 @@ Route::get('/user', function (Request $request) {
 // Route::get('GADGET-GEARS/categoryModel', [CategoryController::class, 'index'])->name('GADGET-GEARS.categoryModel');
 // Route::post('GADGET-GEARS/categoryModel', [CategoryController::class, 'store'])->name('GADGET-GEARS.categoryModel');
 
-Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);
+// Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);
