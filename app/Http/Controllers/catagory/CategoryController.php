@@ -72,9 +72,16 @@ class CategoryController extends Controller
 
 // show cetagory
 
-public function show(){
+public function showParentCetagory(){
 
-  $categories = Category::where('status', 'active')->get(); // categories table থেকে
+  $categories = parent_category::where('status', 'active')->get(); // categories table থেকে
+    return response()->json($categories);
+
+}
+
+public function showCetagory(){
+
+  $categories = category::where('status', 'active')->get(); // categories table থেকে
     return response()->json($categories);
 
 }
@@ -141,5 +148,10 @@ public function showCetagoryList()
     ]);
 }
 
-
+public function getCategories()
+{
+    $categories = Category::with('parent')->where('status', 'active')->get();
+    $groupedCategories = $categories->groupBy('parent.name');
+    return response()->json($groupedCategories);
+}
 }

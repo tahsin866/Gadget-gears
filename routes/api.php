@@ -2,15 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\catagory\CategoryController;
+use App\Http\Controllers\CartController;
 
+use App\Http\Controllers\OrderController;
 
-Route::get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+});
 
-
-// Route::get('GADGET-GEARS/categoryModel', [CategoryController::class, 'index'])->name('GADGET-GEARS.categoryModel');
-// Route::post('GADGET-GEARS/categoryModel', [CategoryController::class, 'store'])->name('GADGET-GEARS.categoryModel');
-
-// Route::get('/show-cetagory-list', [CategoryController::class , 'showCetagoryList']);
+Route::post('/cart/add', [CartController::class, 'addToCart']);
+Route::get('/cart/count', [CartController::class, 'getCartItemCount']);
+Route::post('/orders', [App\Http\Controllers\OrderController::class, 'store']);

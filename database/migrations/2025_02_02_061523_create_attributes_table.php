@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('type');
+            $table->foreignId('product_id')->constrained('products');
             $table->timestamp('created_at')->useCurrent();
-$table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-
+            $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
         });
     }
 

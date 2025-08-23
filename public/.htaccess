@@ -9,10 +9,6 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
@@ -23,3 +19,29 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Security measures
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files composer.json>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files composer.lock>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files package.json>
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Prevent access to storage and bootstrap/cache
+RedirectMatch 404 /\..*$
+RedirectMatch 404 /storage/.*$
+RedirectMatch 404 /bootstrap/cache/.*$

@@ -16,20 +16,12 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-
-            // ✅ parent_id nullable এবং unsignedBigInteger
-            $table->unsignedBigInteger('parent_id')->nullable();
-
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('cascade'); // For nested categories
+            $table->foreignId('brand_id')->nullable()->constrained()->onDelete('cascade'); // Brand-specific categories
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrentOnUpdate()->useCurrent();
-
-            // ✅ Foreign key constraint with SET NULL
-            $table->foreign('parent_id')
-                  ->references('id')
-                  ->on('parent_categories')
-                  ->onDelete('set null');
         });
     }
 

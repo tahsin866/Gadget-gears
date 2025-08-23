@@ -29,19 +29,74 @@ class Category extends Model
         });
     }
 
-    public function parent()
+    // public function parent()
+    // {
+    //     return $this->belongsTo(Category::class, 'parent_id');
+    // }
+
+    // public function children()
+    // {
+    //     return $this->hasMany(Category::class, 'parent_id');
+    // }
+
+    // Products relationship - এটি সংশোধন করুন
+    // public function products()
+    // {
+    //     return $this->hasMany(products::class, 'category_id');
+    // }
+
+
+
+
+
+    public function primaryBrands(): HasMany
     {
-        return $this->belongsTo(Category::class, 'parent_id');
+        return $this->hasMany(Brand::class, 'category_id');
     }
 
-    public function children()
+    /**
+     * All brands - এই ক্যাটেগরির সব ব্র্যান্ড (Many-to-Many)
+     */
+    public function brands(): BelongsToMany
+    {
+        return $this->belongsToMany(Brand::class, 'brand_category')
+                    ->withTimestamps()
+                    ->withPivot('is_featured');
+    }
+
+    /**
+     * Parent category - যদি নেস্টেড ক্যাটেগরি হয়
+     */
+    public function parent()
+    {
+        return $this->belongsTo(parent_category::class, 'parent_id');
+    }
+
+    /**
+     * Child categories - সাব-ক্যাটেগরি
+     */
+    public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    // Products relationship - এটি সংশোধন করুন
-    public function products()
+    /**
+     * Brand owner - যদি এই ক্যাটেগরি কোনো ব্র্যান্ডের অধীনে হয়
+     */
+    public function brandOwner(): BelongsTo
     {
-        return $this->hasMany(products::class, 'category_id');
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
+
+    /**
+     * Products in this category
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+
+
+
 }
