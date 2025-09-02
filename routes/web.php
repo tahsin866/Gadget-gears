@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\addresController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\profileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\catagory\CategoryController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\productController;
 use App\Http\Controllers\brandController;
 use App\Http\Controllers\GadgetGearsController;
 
@@ -139,15 +139,15 @@ Route::delete('/delete-category/{id}', [CategoryController::class, 'deleteCetago
 
 // existing routes এর সাথে এই route টি যোগ করো
 
-Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-Route::get('/products-list', [ProductController::class, 'productList'])->name('products.List');
+Route::post('/products', [productController::class, 'store'])->name('products.store');
+Route::get('/products-list', [productController::class, 'productList'])->name('products.List');
 Route::post('/brand', [brandController::class, 'insertBrand']);
 Route::get('/show-brand', [brandController::class, 'ShowBrand']);
-Route::get('/products-grid', [ProductController::class, 'showGrid']);
+Route::get('/products-grid', [productController::class, 'showGrid']);
 Route::get('/brands', [brandController::class, 'showBrands']);
 Route::get('/division', [addresController::class, 'ShowDivision']);
 Route::get('/get-categories', [CategoryController::class, 'getCategories']);
-Route::get('/feature-types', [ProductController::class, 'getFeatureTypes']);
+Route::get('/feature-types', [productController::class, 'getFeatureTypes']);
 
 // Public Order Routes (for guest orders)
 Route::post('/orders', [App\Http\Controllers\OrderController::class, 'store']);

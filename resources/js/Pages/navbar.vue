@@ -371,14 +371,7 @@ defineExpose({
                     <h3 class="font-semibold text-gray-900">Welcome!</h3>
                     <p class="text-sm text-gray-600">Sign in to access your account</p>
                   </div>
-                  <div class="space-y-2">
-                    <Link :href="route('login')" class="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                      Sign In
-                    </Link>
-                    <Link :href="route('register')" class="block w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                      Create Account
-                    </Link>
-                  </div>
+              
                   <div class="mt-4 pt-4 border-t border-gray-100">
                     <a :href="route('auth.google')" class="flex items-center justify-center w-full px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200">
                       <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24">

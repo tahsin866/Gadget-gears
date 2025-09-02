@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Catagory;
 
-use App\Models\Category;
+use App\Models\category;
 use App\Models\parent_category;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class CategoryController extends Controller
         'meta_description' => 'nullable|string|max:160',
     ]);
 
-    Category::create([
+    category::create([
         'name' => $request->name,
         'slug' => $request->slug,
         'parent_id' => $request->parent_id,
