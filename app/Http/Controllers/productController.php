@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\products;
 
 use App\Models\product_images;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -182,8 +183,8 @@ public function store(Request $request){
 public function productList(){
     try {
         $products = products::with([
-            'brand', 
-            'category', 
+            'brand',
+            'category',
             'images' => function($query) {
                 $query->orderBy('is_primary', 'desc');
             }
@@ -193,13 +194,13 @@ public function productList(){
             // Get primary image or first image
             $primaryImage = $product->images->where('is_primary', 1)->first();
             $imageUrl = null;
-            
+
             if ($primaryImage) {
-                $imageUrl = asset('storage/' . $primaryImage->image_path);
+                $imageUrl = ImageHelper::getImageUrl($primaryImage->image_path);
             } elseif ($product->images->count() > 0) {
-                $imageUrl = asset('storage/' . $product->images->first()->image_path);
+                $imageUrl = ImageHelper::getImageUrl($product->images->first()->image_path);
             }
-            
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -223,7 +224,7 @@ public function productList(){
         });
 
         return response()->json($products);
-        
+
     } catch (\Exception $e) {
         Log::error('Error in productList: ' . $e->getMessage());
         return response()->json([
@@ -286,7 +287,7 @@ public function showGrid(){
                     'sku' => $product->sku,
                     'price' => $product->sale_price ?? $product->price,
                     'originalPrice' => $product->sale_price ? $product->price : null,
-                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x300/E5E7EB/9CA3AF/png?text=No+Image',
+                    'image' => $product->image ? ImageHelper::getImageUrl($product->image) : 'https://placehold.co/400x300/E5E7EB/9CA3AF/png?text=No+Image',
                     'brand' => $product->brand->name ?? 'No Brand',
                     'category' => $product->category->name ?? 'Uncategorized',
                     'rating' => 4.5, // Default rating - you can implement actual rating system later
@@ -309,10 +310,10 @@ public function showGrid(){
             'total' => $products->count(),
             'message' => 'Products retrieved successfully'
         ]);
-        
+
     } catch (\Exception $e) {
         Log::error('Error in showGrid: ' . $e->getMessage());
-        
+
         return response()->json([
             'success' => false,
             'products' => [],
