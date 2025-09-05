@@ -26,7 +26,7 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install Composer dependencies
+      - name: Install Composer dependencies locally
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
       - name: Install NPM dependencies
@@ -70,32 +70,27 @@ jobs:
             echo "Using PHP version:"
             $PHP_CMD -v
 
-            # Determine Composer path dynamically
-            if command -v composer >/dev/null 2>&1; then
-              COMPOSER_CMD="composer"
-            elif [ -f "/usr/bin/composer" ]; then
-              COMPOSER_CMD="/usr/bin/composer"
-            else
-              echo "⚠️ Composer not found! Skipping PHP dependency installation."
-              COMPOSER_CMD=""
-            fi
+            # Set Composer command to cPanel path
+            COMPOSER_CMD="/opt/cpanel/composer/bin/composer"
 
             # Pull latest code
             echo "Pulling latest changes..."
             git fetch origin main
             git reset --hard origin/main
 
-            # Composer install/update if composer exists
-            if [ -n "$COMPOSER_CMD" ]; then
+            # Composer install/update
+            if [ -f "$COMPOSER_CMD" ]; then
               echo "Installing Composer dependencies..."
               if ! $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction; then
-                echo "Composer install failed, trying update..."
-                $PHP_CMD $COMPOSER_CMD update --no-dev --optimize-autoloader --no-interaction || {
-                    echo "Reinstalling vendor..."
-                    rm -rf vendor
-                    $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction
-                }
+                  echo "Composer install failed, trying update..."
+                  $PHP_CMD $COMPOSER_CMD update --no-dev --optimize-autoloader --no-interaction || {
+                      echo "Reinstalling vendor..."
+                      rm -rf vendor
+                      $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction
+                  }
               fi
+            else
+              echo "⚠️ Composer not found at $COMPOSER_CMD, skipping PHP dependencies"
             fi
 
             # NPM install & build

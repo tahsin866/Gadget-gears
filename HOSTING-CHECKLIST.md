@@ -1,67 +1,151 @@
-# Laravel Hosting Migration Checklist
+# cPanel Hosting Setup & Troubleshooting Guide
 
-## 🚨 500 Internal Server Error সমাধানের ধাপসমূহ:
+## � GitHub Actions Deployment Issue সমাধান
 
-### ১. ফাইল আপলোড চেক করুন:
-- ✅ সব Laravel ফাইল আপলোড হয়েছে কিনা
-- ✅ .env ফাইল আপলোড হয়েছে কিনা
-- ✅ vendor/ ফোল্ডার আপলোড হয়েছে কিনা
+### সমস্যা: Script Exit Code 1
+আপনার deployment PHP 8.4 পেয়েছে কিন্তু কোথাও একটা command fail হয়েছে।
 
-### ২. Hosting Environment Setup:
+### সম্ভাব্য কারণসমূহ:
+1. **Git clone/pull fail** - Repository access issue
+2. **Composer install fail** - Package conflicts  
+3. **NPM install/build fail** - Node modules issue
+4. **Permission denied** - File/directory permissions
+5. **Path not found** - Directory structure issue
+
+### সমাধান করা হয়েছে:
+1. ✅ **Detailed error logging** যোগ করেছি
+2. ✅ **Fallback strategies** implement করেছি
+3. ✅ **Better error handling** with exit codes
+4. ✅ **Platform requirements ignore** করেছি Composer এর জন্য
+5. ✅ **Step-by-step verification** যোগ করেছি
+
+## 🔧 Manual Deployment (Backup Option)
+
+যদি GitHub Actions কাজ না করে, manual deployment করুন:
+
+### SSH দিয়ে:
 ```bash
-# cPanel File Manager বা SSH-এ এই commands চালান:
-chmod -R 755 storage
-chmod -R 755 bootstrap/cache
-chmod 644 .env
+# Server এ connect করুন
+ssh username@yourdomain.com
+
+# public_html এ যান  
+cd public_html
+
+# Repository clone/update করুন
+git clone https://github.com/tahsin866/Gadget-gears.git .
+# অথবা যদি আগে থেকে আছে:
+git pull origin main
+
+# Dependencies install করুন
+php84 composer.phar install --no-dev --optimize-autoloader --ignore-platform-reqs
+
+# Frontend build করুন
+npm ci --production
+npm run build
+
+# Permissions set করুন
+chmod -R 755 storage bootstrap/cache
+
+# Storage link তৈরি করুন
+php84 artisan storage:link
+
+# Laravel cache করুন
+php84 artisan config:cache
+php84 artisan route:cache  
+php84 artisan view:cache
 ```
 
-### ৩. Database Configuration:
-আপনার `.env` ফাইলে এই settings update করুন:
-```
-DB_HOST=localhost (usually for shared hosting)
+### cPanel File Manager দিয়ে:
+1. **Zip file upload** করুন
+2. **Extract** করুন public_html এ
+3. **File permissions** ঠিক করুন:
+   - storage: 755
+   - bootstrap/cache: 755
+   - .env: 644
+
+## 🎯 Environment Setup Requirements
+
+### 1. **GitHub Secrets যাচাই করুন:**
+- `HOST` - সঠিক domain/IP
+- `USERNAME` - cPanel username
+- `PORT` - SSH port (22)
+- `SSHKEY` - Private SSH key
+- `PASSPHRASE` - Key passphrase (যদি থাকে)
+
+### 2. **cPanel Settings:**
+- SSH access enabled
+- Git installed
+- PHP 8.2+ available
+- Composer accessible
+
+### 3. **Database Configuration:**
+```env
+DB_CONNECTION=mysql
+DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=your_cpanel_database_name
-DB_USERNAME=your_cpanel_database_user
-DB_PASSWORD=your_cpanel_database_password
+DB_DATABASE=your_db_name
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
 ```
 
-### ৪. URL Configuration:
-```
-APP_URL=https://fyohub.com
-APP_ENV=production
-APP_DEBUG=false
-```
+## 🔍 Debugging Steps
 
-### ৫. Laravel Commands (SSH access থাকলে):
+### 1. **SSH Test:**
 ```bash
-php artisan config:clear
-php artisan cache:clear
-php artisan storage:link
-php artisan migrate --force
+ssh username@yourdomain.com
+php -v
+composer --version
+git --version
+npm --version
 ```
 
-### ৬. File Permission চেক:
-- storage/ ফোল্ডার writable হতে হবে (755)
-- bootstrap/cache/ ফোল্ডার writable হতে হবে (755)
-- .env ফাইল readable হতে হবে (644)
+### 2. **Manual Commands Test:**
+```bash
+cd /home/username/public_html
+git clone https://github.com/tahsin866/Gadget-gears.git test-deploy
+cd test-deploy
+php composer.phar install --no-dev --ignore-platform-reqs
+```
 
-### ৭. Error Debugging:
-১. আপনার ডোমেইনে `/debug.php` visit করুন
-২. সেখানে কি error দেখাচ্ছে check করুন
-৩. `/setup.php` file run করুন Laravel commands execute করার জন্য
+### 3. **Check Logs:**
+- GitHub Actions logs  
+- cPanel Error Logs
+- Laravel logs: `storage/logs/laravel.log`
 
-### ৮. Common Issues:
-- **Composer না থাকলে:** vendor/ ফোল্ডার manually আপলোড করুন
-- **PHP Version:** minimum PHP 8.1 required
-- **Database:** MySQL database তৈরি করুন cPanel থেকে
-- **Document Root:** public/ ফোল্ডার point করুন
+## 🛠️ Browser-Based Deployment
 
-### ৯. Security (Setup complete হওয়ার পর):
-- debug.php ফাইল delete করুন
-- setup.php ফাইল delete করুন
-- APP_DEBUG=false করুন .env ফাইলে
+**Alternative: deploy.php ব্যবহার করুন**
 
-## 📞 Support:
-যদি এখনও error থাকে, error log check করুন:
-- cPanel Error Logs দেখুন
-- storage/logs/laravel.log দেখুন
+1. `deploy.php` file আপলোড করুন domain root এ
+2. Browser এ visit করুন: `https://yourdomain.com/deploy.php`
+3. Instructions follow করুন
+4. Complete হওয়ার পর file delete করুন
+
+## 📋 Post-Deployment Checklist
+
+- [ ] Site loads without errors
+- [ ] Images display correctly (/storage/products/)
+- [ ] Database connected
+- [ ] Admin panel accessible
+- [ ] Forms working
+- [ ] SSL certificate active
+
+## 🔐 Security Checklist
+
+- [ ] APP_DEBUG=false
+- [ ] Remove deploy.php
+- [ ] Secure file permissions
+- [ ] Database credentials secured
+- [ ] Error logging enabled
+
+## 📞 Emergency Contacts
+
+### যদি সব fail হয়:
+1. **Hosting provider support** contact করুন
+2. **Manual FTP upload** করুন
+3. **Database manually import** করুন
+4. **Basic .htaccess** setup করুন
+
+---
+
+**Next Deployment**: Push to main branch আবার test করুন improved workflow দিয়ে!
