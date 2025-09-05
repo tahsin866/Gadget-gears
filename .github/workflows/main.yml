@@ -1,25 +1,121 @@
-name: Deploy
+name: Deploy Laravel to cPanel
 
-# Trigger the workflow on push and
-# pull request events on the master branch
+# Trigger deployment on push to main branch
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
 
-# Authenticate to the the server via ssh
-# and run our deployment script
 jobs:
   deploy:
+    name: Deploy to cPanel
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip, gd
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Deploy to cPanel
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          script: "cd /var/www/miniblog && ./.scripts/deploy.sh"
+          script_stop: true
+          script: |
+            echo "Starting deployment to cPanel..."
+
+            # Define paths (update these according to your cPanel structure)
+            DOMAIN_PATH="/home/${{ secrets.USERNAME }}/public_html"
+            BACKUP_PATH="/home/${{ secrets.USERNAME }}/backups"
+
+            # Create backup directory if not exists
+            mkdir -p $BACKUP_PATH
+
+            # Create backup of current deployment
+            if [ -d "$DOMAIN_PATH" ]; then
+              echo "Creating backup..."
+              tar -czf "$BACKUP_PATH/backup_$(date +%Y%m%d_%H%M%S).tar.gz" -C "$DOMAIN_PATH" . 2>/dev/null || true
+            fi
+
+            # Navigate to domain directory
+            cd $DOMAIN_PATH
+
+            # Pull latest changes from Git
+            echo "Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install/Update Composer dependencies
+            echo "Installing Composer dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Install/Update NPM dependencies and build
+            echo "Building frontend assets..."
+            npm ci --production
+            npm run build
+
+            # Set proper permissions
+            echo "Setting file permissions..."
+            find storage -type f -exec chmod 644 {} \;
+            find storage -type d -exec chmod 755 {} \;
+            find bootstrap/cache -type f -exec chmod 644 {} \;
+            find bootstrap/cache -type d -exec chmod 755 {} \;
+
+            # Create storage symbolic link if it doesn't exist
+            if [ ! -L "public/storage" ]; then
+              echo "Creating storage symbolic link..."
+              ln -sf ../storage/app/public public/storage
+            fi
+
+            # Clear all Laravel caches
+            echo "Clearing Laravel caches..."
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+
+            # Cache for production
+            echo "Caching for production..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Optimize application
+            php artisan optimize
+
+            # Run database migrations (uncomment if needed)
+            # echo "Running database migrations..."
+            # php artisan migrate --force
+
+            echo "Deployment completed successfully!"
+
+      - name: Deployment Status
+        if: success()
+        run: echo "✅ Deployment to cPanel completed successfully!"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Deployment failed! Please check the logs."
