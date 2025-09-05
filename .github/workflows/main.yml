@@ -13,13 +13,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to cPanel via SSH
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip, gd
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Deploy to cPanel
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
           script_stop: true
           script: |
             echo "Starting deployment to cPanel..."
@@ -38,7 +61,7 @@ jobs:
 
             cd $DOMAIN_PATH
 
-            # Determine PHP version on cPanel
+            # Determine PHP version
             PHP_CMD="php"
             if command -v php82 >/dev/null 2>&1; then PHP_CMD="php82"; fi
             if command -v php81 >/dev/null 2>&1; then PHP_CMD="php81"; fi
@@ -47,20 +70,32 @@ jobs:
             echo "Using PHP version:"
             $PHP_CMD -v
 
+            # Determine Composer path dynamically
+            if command -v composer >/dev/null 2>&1; then
+              COMPOSER_CMD="composer"
+            elif [ -f "/usr/bin/composer" ]; then
+              COMPOSER_CMD="/usr/bin/composer"
+            else
+              echo "⚠️ Composer not found! Skipping PHP dependency installation."
+              COMPOSER_CMD=""
+            fi
+
             # Pull latest code
             echo "Pulling latest changes..."
             git fetch origin main
             git reset --hard origin/main
 
-            # Composer install/update
-            echo "Installing Composer dependencies..."
-            if ! $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction; then
-              echo "Composer install failed, trying update..."
-              $PHP_CMD /usr/local/bin/composer update --no-dev --optimize-autoloader --no-interaction || {
-                  echo "Reinstalling vendor..."
-                  rm -rf vendor
-                  $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
-              }
+            # Composer install/update if composer exists
+            if [ -n "$COMPOSER_CMD" ]; then
+              echo "Installing Composer dependencies..."
+              if ! $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction; then
+                echo "Composer install failed, trying update..."
+                $PHP_CMD $COMPOSER_CMD update --no-dev --optimize-autoloader --no-interaction || {
+                    echo "Reinstalling vendor..."
+                    rm -rf vendor
+                    $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction
+                }
+              fi
             fi
 
             # NPM install & build
