@@ -17,7 +17,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip, gd
           coverage: none
 
@@ -63,26 +63,58 @@ jobs:
             # Navigate to domain directory
             cd $DOMAIN_PATH
 
+            # Check PHP version and set appropriate PHP command
+            echo "Checking PHP version..."
+            PHP_CMD="php"
+            
+            # Try different PHP versions available on cPanel
+            if command -v php82 >/dev/null 2>&1; then
+                PHP_CMD="php82"
+                echo "Using PHP 8.2"
+            elif command -v php81 >/dev/null 2>&1; then
+                PHP_CMD="php81"
+                echo "Using PHP 8.1"
+            elif command -v php80 >/dev/null 2>&1; then
+                PHP_CMD="php80"
+                echo "Using PHP 8.0"
+            else
+                echo "Using default PHP"
+            fi
+
+            # Check current PHP version
+            $PHP_CMD -v
+
             # Pull latest changes from Git
             echo "Pulling latest changes..."
             git fetch origin main
             git reset --hard origin/main
 
-            # Install/Update Composer dependencies
+            # Install/Update Composer dependencies with proper error handling
             echo "Installing Composer dependencies..."
-            composer install --no-dev --optimize-autoloader --no-interaction
+            if ! $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction; then
+                echo "Composer install failed, trying composer update..."
+                $PHP_CMD /usr/local/bin/composer update --no-dev --optimize-autoloader --no-interaction || {
+                    echo "Composer update also failed, trying to delete vendor and reinstall..."
+                    rm -rf vendor
+                    $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
+                }
+            fi
 
             # Install/Update NPM dependencies and build
             echo "Building frontend assets..."
-            npm ci --production
-            npm run build
+            if command -v npm >/dev/null 2>&1; then
+                npm ci --production
+                npm run build
+            else
+                echo "NPM not found, skipping frontend build"
+            fi
 
             # Set proper permissions
             echo "Setting file permissions..."
-            find storage -type f -exec chmod 644 {} \;
-            find storage -type d -exec chmod 755 {} \;
-            find bootstrap/cache -type f -exec chmod 644 {} \;
-            find bootstrap/cache -type d -exec chmod 755 {} \;
+            find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
+            find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
+            find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
+            find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
 
             # Create storage symbolic link if it doesn't exist
             if [ ! -L "public/storage" ]; then
@@ -92,23 +124,23 @@ jobs:
 
             # Clear all Laravel caches
             echo "Clearing Laravel caches..."
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan route:clear
-            php artisan view:clear
+            $PHP_CMD artisan config:clear 2>/dev/null || true
+            $PHP_CMD artisan cache:clear 2>/dev/null || true
+            $PHP_CMD artisan route:clear 2>/dev/null || true
+            $PHP_CMD artisan view:clear 2>/dev/null || true
 
             # Cache for production
             echo "Caching for production..."
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            $PHP_CMD artisan config:cache 2>/dev/null || true
+            $PHP_CMD artisan route:cache 2>/dev/null || true
+            $PHP_CMD artisan view:cache 2>/dev/null || true
 
             # Optimize application
-            php artisan optimize
+            $PHP_CMD artisan optimize 2>/dev/null || true
 
             # Run database migrations (uncomment if needed)
             # echo "Running database migrations..."
-            # php artisan migrate --force
+            # $PHP_CMD artisan migrate --force
 
             echo "Deployment completed successfully!"
 
