@@ -1,6 +1,5 @@
 name: Deploy Laravel to cPanel
 
-# Trigger deployment on push to main branch
 on:
   push:
     branches: ["main"]
@@ -14,29 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip, gd
-          coverage: none
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-      - name: Install NPM dependencies
-        run: npm ci
-
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Deploy to cPanel
+      - name: Deploy to cPanel via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -47,60 +24,46 @@ jobs:
           script: |
             echo "Starting deployment to cPanel..."
 
-            # Define paths (update these according to your cPanel structure)
             DOMAIN_PATH="/home/${{ secrets.USERNAME }}/public_html"
             BACKUP_PATH="/home/${{ secrets.USERNAME }}/backups"
 
             # Create backup directory if not exists
             mkdir -p $BACKUP_PATH
 
-            # Create backup of current deployment
+            # Backup current deployment
             if [ -d "$DOMAIN_PATH" ]; then
               echo "Creating backup..."
               tar -czf "$BACKUP_PATH/backup_$(date +%Y%m%d_%H%M%S).tar.gz" -C "$DOMAIN_PATH" . 2>/dev/null || true
             fi
 
-            # Navigate to domain directory
             cd $DOMAIN_PATH
 
-            # Check PHP version and set appropriate PHP command
-            echo "Checking PHP version..."
+            # Determine PHP version on cPanel
             PHP_CMD="php"
-            
-            # Try different PHP versions available on cPanel
-            if command -v php82 >/dev/null 2>&1; then
-                PHP_CMD="php82"
-                echo "Using PHP 8.2"
-            elif command -v php81 >/dev/null 2>&1; then
-                PHP_CMD="php81"
-                echo "Using PHP 8.1"
-            elif command -v php80 >/dev/null 2>&1; then
-                PHP_CMD="php80"
-                echo "Using PHP 8.0"
-            else
-                echo "Using default PHP"
-            fi
+            if command -v php82 >/dev/null 2>&1; then PHP_CMD="php82"; fi
+            if command -v php81 >/dev/null 2>&1; then PHP_CMD="php81"; fi
+            if command -v php80 >/dev/null 2>&1; then PHP_CMD="php80"; fi
 
-            # Check current PHP version
+            echo "Using PHP version:"
             $PHP_CMD -v
 
-            # Pull latest changes from Git
+            # Pull latest code
             echo "Pulling latest changes..."
             git fetch origin main
             git reset --hard origin/main
 
-            # Install/Update Composer dependencies with proper error handling
+            # Composer install/update
             echo "Installing Composer dependencies..."
             if ! $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction; then
-                echo "Composer install failed, trying composer update..."
-                $PHP_CMD /usr/local/bin/composer update --no-dev --optimize-autoloader --no-interaction || {
-                    echo "Composer update also failed, trying to delete vendor and reinstall..."
-                    rm -rf vendor
-                    $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
-                }
+              echo "Composer install failed, trying update..."
+              $PHP_CMD /usr/local/bin/composer update --no-dev --optimize-autoloader --no-interaction || {
+                  echo "Reinstalling vendor..."
+                  rm -rf vendor
+                  $PHP_CMD /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
+              }
             fi
 
-            # Install/Update NPM dependencies and build
+            # NPM install & build
             echo "Building frontend assets..."
             if command -v npm >/dev/null 2>&1; then
                 npm ci --production
@@ -109,20 +72,20 @@ jobs:
                 echo "NPM not found, skipping frontend build"
             fi
 
-            # Set proper permissions
-            echo "Setting file permissions..."
+            # Set file permissions
+            echo "Setting permissions..."
             find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
             find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
             find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
             find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
 
-            # Create storage symbolic link if it doesn't exist
+            # Create symbolic link
             if [ ! -L "public/storage" ]; then
-              echo "Creating storage symbolic link..."
+              echo "Creating storage symlink..."
               ln -sf ../storage/app/public public/storage
             fi
 
-            # Clear all Laravel caches
+            # Clear caches
             echo "Clearing Laravel caches..."
             $PHP_CMD artisan config:clear 2>/dev/null || true
             $PHP_CMD artisan cache:clear 2>/dev/null || true
@@ -135,14 +98,10 @@ jobs:
             $PHP_CMD artisan route:cache 2>/dev/null || true
             $PHP_CMD artisan view:cache 2>/dev/null || true
 
-            # Optimize application
+            # Optimize
             $PHP_CMD artisan optimize 2>/dev/null || true
 
-            # Run database migrations (uncomment if needed)
-            # echo "Running database migrations..."
-            # $PHP_CMD artisan migrate --force
-
-            echo "Deployment completed successfully!"
+            echo "✅ Deployment completed successfully!"
 
       - name: Deployment Status
         if: success()
