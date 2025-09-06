@@ -1,5 +1,5 @@
 /.phpunit.cache
-/node_modules
+# /node_modules  # Commented out to include node_modules
 /public/build
 /public/hot
 /public/storage
@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Keep these files for deployment
+# package.json - Already included
+# package-lock.json - Already included
+# vite.config.js - Already included
+# node_modules/ - Now included (commented out above)
