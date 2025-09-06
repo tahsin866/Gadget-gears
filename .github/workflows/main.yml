@@ -73,7 +73,7 @@ jobs:
             # Set Composer command to cPanel path
             COMPOSER_CMD="/opt/cpanel/composer/bin/composer"
 
-            # Pull latest code
+            # Pull latest code কেমন  আছো
             echo "Pulling latest changes..."
             git fetch origin main
             git reset --hard origin/main
