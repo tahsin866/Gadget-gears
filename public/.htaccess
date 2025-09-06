@@ -41,7 +41,7 @@
     Deny from all
 </Files>
 
-# Prevent access to storage and bootstrap/cache
+# Prevent access to dot files
 RedirectMatch 404 /\..*$
-RedirectMatch 404 /storage/.*$
-RedirectMatch 404 /bootstrap/cache/.*$
+# RedirectMatch 404 /storage/.*$
+# RedirectMatch 404 /bootstrap/cache/.*$
