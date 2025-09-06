@@ -1,21 +1,58 @@
 <?php
 /**
- * Laravel cPanel Deployment Helper
+ * Enhanced Laravel cPanel Deployment Helper
  * Upload this file to your cPanel root directory and run it via browser
  * Example: https://yourdomain.com/deploy.php
  */
 
-echo "<h2>Laravel cPanel Deployment Helper</h2>";
+// Security check - delete this file after use
+if (file_exists('.env') && strpos(file_get_contents('.env'), 'APP_ENV=production') !== false) {
+    echo "<div style='background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 20px 0; border-radius: 5px;'>";
+    echo "<strong>⚠️ Security Warning:</strong> This is a production environment. Please delete this file after deployment for security!";
+    echo "</div>";
+}
+
+echo "<h2>🚀 Enhanced Laravel cPanel Deployment Helper</h2>";
+echo "<style>
+    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .error { background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .info { background: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+</style>";
+
+// Function to detect PHP version
+function detectPHP() {
+    $phpVersions = ['php84', 'php83', 'php82', 'php81', 'php80', 'php'];
+    foreach ($phpVersions as $version) {
+        if (shell_exec("command -v $version 2>/dev/null")) {
+            return $version;
+        }
+    }
+    return 'php';
+}
+
+// Function to run commands with proper PHP version
+function runCommand($command, $usePHP = false) {
+    if ($usePHP) {
+        $phpCmd = detectPHP();
+        $command = "$phpCmd $command";
+    }
+
+    $output = [];
+    $return_var = 0;
+    exec("$command 2>&1", $output, $return_var);
+    return [
+        'output' => implode("\n", $output),
+        'success' => $return_var === 0,
+        'command' => $command
+    ];
+}
 
 // Function to run artisan commands
 function runArtisan($command) {
-    $output = [];
-    $return_var = 0;
-    exec("php artisan $command 2>&1", $output, $return_var);
-    return [
-        'output' => implode("\n", $output),
-        'success' => $return_var === 0
-    ];
+    return runCommand("artisan $command", true);
 }
 
 // Function to create symbolic link
