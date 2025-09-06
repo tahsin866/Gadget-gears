@@ -1,228 +1,25 @@
-name: Deploy Laravel to cPanel
+name: Deploy
 
+# Trigger the workflow on push and
+# pull request events on the master branch
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
 
+# Authenticate to the the server via ssh
+# and run our deployment script
 jobs:
   deploy:
-    name: Deploy to cPanel
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, zip, gd
-          coverage: none
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install Composer dependencies locally
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-      - name: Install NPM dependencies
-        run: npm ci
-
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Deploy to cPanel
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v3
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          script_stop: false
-          script: |
-            set -e  # Exit on any error
-
-            echo "🚀 Starting deployment to cPanel..."
-
-            DOMAIN_PATH="/home/${{ secrets.USERNAME }}/public_html"
-            BACKUP_PATH="/home/${{ secrets.USERNAME }}/backups"
-
-            echo "📂 Domain Path: $DOMAIN_PATH"
-
-            # Create backup directory
-            mkdir -p "$BACKUP_PATH" || {
-              echo "❌ Failed to create backup directory"
-              exit 1
-            }
-
-            # Backup current deployment
-            if [ -d "$DOMAIN_PATH" ]; then
-              echo "📦 Creating backup..."
-              tar -czf "$BACKUP_PATH/backup_$(date +%Y%m%d_%H%M%S).tar.gz" -C "$DOMAIN_PATH" . 2>/dev/null || {
-                echo "⚠️ Backup failed, continuing anyway..."
-              }
-            else
-              echo "📂 Creating domain directory..."
-              mkdir -p "$DOMAIN_PATH" || {
-                echo "❌ Failed to create domain directory"
-                exit 1
-              }
-            fi
-
-            # Navigate to domain directory
-            cd "$DOMAIN_PATH" || {
-              echo "❌ Failed to navigate to domain directory"
-              exit 1
-            }
-
-            echo "📍 Current directory: $(pwd)"
-
-            # Determine PHP version (support for newer versions)
-            PHP_CMD="php"
-            if command -v php84 >/dev/null 2>&1; then
-              PHP_CMD="php84"
-            elif command -v php83 >/dev/null 2>&1; then
-              PHP_CMD="php83"
-            elif command -v php82 >/dev/null 2>&1; then
-              PHP_CMD="php82"
-            elif command -v php81 >/dev/null 2>&1; then
-              PHP_CMD="php81"
-            elif command -v php80 >/dev/null 2>&1; then
-              PHP_CMD="php80"
-            fi
-
-            echo "🐘 Using PHP: $PHP_CMD"
-            $PHP_CMD -v || {
-              echo "❌ PHP command failed"
-              exit 1
-            }
-
-            # Check if git repository exists
-            if [ ! -d ".git" ]; then
-              echo "🔄 Initializing git repository..."
-              rm -rf * .* 2>/dev/null || true
-              git clone https://github.com/tahsin866/Gadget-gears.git . || {
-                echo "❌ Git clone failed"
-                exit 1
-              }
-            else
-              echo "🔄 Updating existing repository..."
-              git fetch origin main || {
-                echo "❌ Git fetch failed"
-                exit 1
-              }
-              git reset --hard origin/main || {
-                echo "❌ Git reset failed"
-                exit 1
-              }
-            fi
-
-            echo "✅ Git operations completed"
-
-            # Find composer command
-            COMPOSER_CMD=""
-            if command -v composer >/dev/null 2>&1; then
-              COMPOSER_CMD="composer"
-            elif [ -f "/opt/cpanel/composer/bin/composer" ]; then
-              COMPOSER_CMD="/opt/cpanel/composer/bin/composer"
-            elif [ -f "/usr/bin/composer" ]; then
-              COMPOSER_CMD="/usr/bin/composer"
-            elif [ -f "/usr/local/bin/composer" ]; then
-              COMPOSER_CMD="/usr/local/bin/composer"
-            else
-              echo "📦 Installing Composer..."
-              curl -sS https://getcomposer.org/installer | $PHP_CMD -- --install-dir=/tmp
-              COMPOSER_CMD="$PHP_CMD /tmp/composer.phar"
-            fi
-
-            echo "📦 Using Composer: $COMPOSER_CMD"
-
-            # Install PHP dependencies
-            if [ -n "$COMPOSER_CMD" ]; then
-              echo "📦 Installing Composer dependencies..."
-              $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs || {
-                echo "⚠️ Composer install failed, trying update..."
-                $PHP_CMD $COMPOSER_CMD update --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs || {
-                  echo "⚠️ Composer update failed, reinstalling vendor..."
-                  rm -rf vendor composer.lock
-                  $PHP_CMD $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs || {
-                    echo "❌ All Composer operations failed"
-                    exit 1
-                  }
-                }
-              }
-              echo "✅ PHP dependencies installed"
-            fi
-
-            # NPM operations
-            if command -v npm >/dev/null 2>&1; then
-              echo "📦 Installing NPM dependencies..."
-              npm ci --production || {
-                echo "⚠️ NPM ci failed, trying npm install..."
-                rm -rf node_modules package-lock.json
-                npm install --production || {
-                  echo "❌ NPM install failed"
-                  exit 1
-                }
-              }
-
-              echo "🏗️ Building frontend assets..."
-              npm run build || {
-                echo "❌ NPM build failed"
-                exit 1
-              }
-              echo "✅ Frontend assets built successfully"
-            else
-              echo "⚠️ NPM not found, skipping frontend build"
-            fi
-
-            # Set file permissions
-            echo "🔐 Setting file permissions..."
-            chmod -R 755 storage bootstrap/cache 2>/dev/null || {
-              find storage -type d -exec chmod 755 {} \; 2>/dev/null || true
-              find storage -type f -exec chmod 644 {} \; 2>/dev/null || true
-              find bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true
-              find bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true
-            }
-
-            # Create storage symbolic link
-            if [ ! -L "public/storage" ]; then
-              echo "🔗 Creating storage symbolic link..."
-              ln -sf ../storage/app/public public/storage || {
-                echo "❌ Failed to create storage symbolic link"
-                exit 1
-              }
-            fi
-
-            # Clear Laravel caches
-            echo "🧹 Clearing Laravel caches..."
-            $PHP_CMD artisan config:clear 2>/dev/null || echo "⚠️ Config clear failed"
-            $PHP_CMD artisan cache:clear 2>/dev/null || echo "⚠️ Cache clear failed"
-            $PHP_CMD artisan route:clear 2>/dev/null || echo "⚠️ Route clear failed"
-            $PHP_CMD artisan view:clear 2>/dev/null || echo "⚠️ View clear failed"
-
-            # Cache for production
-            echo "💾 Caching for production..."
-            $PHP_CMD artisan config:cache 2>/dev/null || echo "⚠️ Config cache failed"
-            $PHP_CMD artisan route:cache 2>/dev/null || echo "⚠️ Route cache failed"
-            $PHP_CMD artisan view:cache 2>/dev/null || echo "⚠️ View cache failed"
-
-            # Optimize application
-            echo "⚡ Optimizing application..."
-            $PHP_CMD artisan optimize 2>/dev/null || echo "⚠️ Optimize failed"
-
-            echo "✅ Deployment completed successfully!"
-            echo "🌐 Your Laravel application should now be live!"
-
-      - name: Deployment Status
-        if: success()
-        run: echo "✅ Deployment to cPanel completed successfully!"
-
-      - name: Deployment Failed
-        if: failure()
-        run: echo "❌ Deployment failed! Please check the logs."
+          script: "cd /var/www/miniblog && ./.scripts/deploy.sh"
